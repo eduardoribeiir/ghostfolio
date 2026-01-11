@@ -1,4 +1,4 @@
-import { AccountBalanceService } from '@ghostfolio/api/app/account-balance/account-balance.service';
+import { AccountBalanceService } from '@ghostfolio/api/app/account/services/account-balance.service';
 import { OrderService } from '@ghostfolio/api/app/order/order.service';
 import { PortfolioCalculatorFactory } from '@ghostfolio/api/app/portfolio/calculator/portfolio-calculator.factory';
 import { PortfolioSnapshotValue } from '@ghostfolio/api/app/portfolio/interfaces/snapshot-value.interface';

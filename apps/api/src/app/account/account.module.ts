@@ -1,4 +1,4 @@
-import { AccountBalanceModule } from '@ghostfolio/api/app/account-balance/account-balance.module';
+import { AccountBalanceModule } from '@ghostfolio/api/app/account/account-balance.module';
 import { PortfolioModule } from '@ghostfolio/api/app/portfolio/portfolio.module';
 import { RedactValuesInResponseModule } from '@ghostfolio/api/interceptors/redact-values-in-response/redact-values-in-response.module';
 import { ApiModule } from '@ghostfolio/api/services/api/api.module';
@@ -9,12 +9,18 @@ import { PrismaModule } from '@ghostfolio/api/services/prisma/prisma.module';
 
 import { Module } from '@nestjs/common';
 
-import { AccountController } from './account.controller';
-import { AccountService } from './account.service';
+import { AccountController } from './controllers/account.controller';
+import { AccountTransferController } from './controllers/account-transfer.controller';
+import { AccountService } from './services/account.service';
+import { AccountCrudService } from './services/account-crud.service';
+import { AccountCashService } from './services/account-cash.service';
 
 @Module({
-  controllers: [AccountController],
-  exports: [AccountService],
+  controllers: [
+    AccountController,
+    AccountTransferController
+  ],
+  exports: [AccountService, AccountCrudService, AccountCashService],
   imports: [
     AccountBalanceModule,
     ApiModule,
@@ -25,6 +31,10 @@ import { AccountService } from './account.service';
     PrismaModule,
     RedactValuesInResponseModule
   ],
-  providers: [AccountService]
+  providers: [
+    AccountService,
+    AccountCrudService,
+    AccountCashService
+  ]
 })
 export class AccountModule {}

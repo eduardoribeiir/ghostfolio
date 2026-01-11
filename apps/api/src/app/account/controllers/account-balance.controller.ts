@@ -1,4 +1,4 @@
-import { AccountService } from '@ghostfolio/api/app/account/account.service';
+import { AccountService } from '@ghostfolio/api/app/account/services/account.service';
 import { HasPermission } from '@ghostfolio/api/decorators/has-permission.decorator';
 import { HasPermissionGuard } from '@ghostfolio/api/guards/has-permission.guard';
 import { CreateAccountBalanceDto } from '@ghostfolio/common/dtos';

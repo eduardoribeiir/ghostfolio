@@ -1,5 +1,5 @@
-import { AccountBalanceService } from '@ghostfolio/api/app/account-balance/account-balance.service';
-import { AccountService } from '@ghostfolio/api/app/account/account.service';
+import { AccountBalanceService } from '@ghostfolio/api/app/account/services/account-balance.service';
+import { AccountService } from '@ghostfolio/api/app/account/services/account.service';
 import { CashDetails } from '@ghostfolio/api/app/account/interfaces/cash-details.interface';
 import { AssetProfileChangedEvent } from '@ghostfolio/api/events/asset-profile-changed.event';
 import { PortfolioChangedEvent } from '@ghostfolio/api/events/portfolio-changed.event';

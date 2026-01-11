@@ -1,4 +1,4 @@
-import { AccountService } from '@ghostfolio/api/app/account/account.service';
+import { AccountService } from '@ghostfolio/api/app/account/services/account.service';
 import { OrderService } from '@ghostfolio/api/app/order/order.service';
 import { PlatformService } from '@ghostfolio/api/app/platform/platform.service';
 import { PortfolioService } from '@ghostfolio/api/app/portfolio/portfolio.service';
