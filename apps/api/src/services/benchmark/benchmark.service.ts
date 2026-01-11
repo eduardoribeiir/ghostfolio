@@ -1,316 +1,88 @@
-import { RedisCacheService } from '@ghostfolio/api/app/redis-cache/redis-cache.service';
-import { DataProviderService } from '@ghostfolio/api/services/data-provider/data-provider.service';
-import { MarketDataService } from '@ghostfolio/api/services/market-data/market-data.service';
-import { PrismaService } from '@ghostfolio/api/services/prisma/prisma.service';
-import { PropertyService } from '@ghostfolio/api/services/property/property.service';
-import { SymbolProfileService } from '@ghostfolio/api/services/symbol-profile/symbol-profile.service';
-import {
-  CACHE_TTL_INFINITE,
-  PROPERTY_BENCHMARKS
-} from '@ghostfolio/common/config';
-import { calculateBenchmarkTrend } from '@ghostfolio/common/helper';
-import {
-  AssetProfileIdentifier,
-  Benchmark,
-  BenchmarkProperty,
-  BenchmarkResponse
-} from '@ghostfolio/common/interfaces';
-import { BenchmarkTrend } from '@ghostfolio/common/types';
-
 import { Injectable, Logger } from '@nestjs/common';
-import { SymbolProfile } from '@prisma/client';
-import { Big } from 'big.js';
-import { addHours, isAfter, subDays } from 'date-fns';
-import { uniqBy } from 'lodash';
-import ms from 'ms';
-
-import { BenchmarkValue } from './interfaces/benchmark-value.interface';
+import { BenchmarkCalculatorService } from './benchmark-calculator.service';
+import { BenchmarkCacheService } from './benchmark-cache.service';
+import { BenchmarkManagerService } from './benchmark-manager.service';
+import { BenchmarkTrendService } from './benchmark-trend.service';
+import { Benchmark } from '@ghostfolio/common/interfaces';
 
 @Injectable()
 export class BenchmarkService {
-  private readonly CACHE_KEY_BENCHMARKS = 'BENCHMARKS';
-
   public constructor(
-    private readonly dataProviderService: DataProviderService,
-    private readonly marketDataService: MarketDataService,
-    private readonly prismaService: PrismaService,
-    private readonly propertyService: PropertyService,
-    private readonly redisCacheService: RedisCacheService,
-    private readonly symbolProfileService: SymbolProfileService
+    private readonly benchmarkCalculator: BenchmarkCalculatorService,
+    private readonly benchmarkCache: BenchmarkCacheService,
+    private readonly benchmarkManager: BenchmarkManagerService,
+    private readonly benchmarkTrend: BenchmarkTrendService
   ) {}
-
-  public calculateChangeInPercentage(baseValue: number, currentValue: number) {
-    if (baseValue && currentValue) {
-      return new Big(currentValue).div(baseValue).minus(1).toNumber();
-    }
-
-    return 0;
-  }
-
-  public async getBenchmarkTrends({
-    dataSource,
-    symbol
-  }: AssetProfileIdentifier) {
-    const historicalData = await this.marketDataService.marketDataItems({
-      orderBy: {
-        date: 'desc'
-      },
-      where: {
-        dataSource,
-        symbol,
-        date: { gte: subDays(new Date(), 400) }
-      }
-    });
-
-    const fiftyDayAverage = calculateBenchmarkTrend({
-      historicalData,
-      days: 50
-    });
-    const twoHundredDayAverage = calculateBenchmarkTrend({
-      historicalData,
-      days: 200
-    });
-
-    return { trend50d: fiftyDayAverage, trend200d: twoHundredDayAverage };
-  }
 
   public async getBenchmarks({
     enableSharing = false,
     useCache = true
-  } = {}): Promise<BenchmarkResponse['benchmarks']> {
+  } = {}): Promise<Benchmark[]> {
     if (useCache) {
-      try {
-        const cachedBenchmarkValue = await this.redisCacheService.get(
-          this.CACHE_KEY_BENCHMARKS
-        );
-
-        const { benchmarks, expiration }: BenchmarkValue =
-          JSON.parse(cachedBenchmarkValue);
-
-        Logger.debug('Fetched benchmarks from cache', 'BenchmarkService');
-
-        if (isAfter(new Date(), new Date(expiration))) {
-          this.calculateAndCacheBenchmarks({
-            enableSharing
-          });
+      const cached = await this.benchmarkCache.getCachedBenchmarks();
+      
+      if (cached) {
+        if (this.benchmarkCache.isCacheExpired(cached.expiration)) {
+          this.calculateAndCacheBenchmarks({ enableSharing });
         }
-
-        return benchmarks;
-      } catch {}
+        return cached.benchmarks;
+      }
     }
 
     return this.calculateAndCacheBenchmarks({ enableSharing });
   }
 
-  public async getBenchmarkAssetProfiles({
-    enableSharing = false
-  } = {}): Promise<Partial<SymbolProfile>[]> {
-    const symbolProfileIds: string[] = (
-      (await this.propertyService.getByKey<BenchmarkProperty[]>(
-        PROPERTY_BENCHMARKS
-      )) ?? []
-    )
-      .filter((benchmark) => {
-        if (enableSharing) {
-          return benchmark.enableSharing;
-        }
-
-        return true;
-      })
-      .map(({ symbolProfileId }) => {
-        return symbolProfileId;
-      });
-
-    const assetProfiles =
-      await this.symbolProfileService.getSymbolProfilesByIds(symbolProfileIds);
-
-    return assetProfiles
-      .map(({ dataSource, id, name, symbol }) => {
-        return {
-          dataSource,
-          id,
-          name,
-          symbol
-        };
-      })
-      .sort((a, b) => {
-        return a.name?.localeCompare(b?.name) ?? 0;
-      });
+  public async addBenchmark(identifier: any): Promise<any> {
+    return this.benchmarkManager.addBenchmark(identifier);
   }
 
-  public async addBenchmark({
-    dataSource,
-    symbol
-  }: AssetProfileIdentifier): Promise<Partial<SymbolProfile>> {
-    const assetProfile = await this.prismaService.symbolProfile.findFirst({
-      where: {
-        dataSource,
-        symbol
-      }
-    });
-
-    if (!assetProfile) {
-      return;
-    }
-
-    let benchmarks =
-      (await this.propertyService.getByKey<BenchmarkProperty[]>(
-        PROPERTY_BENCHMARKS
-      )) ?? [];
-
-    benchmarks.push({ symbolProfileId: assetProfile.id });
-
-    benchmarks = uniqBy(benchmarks, 'symbolProfileId');
-
-    await this.propertyService.put({
-      key: PROPERTY_BENCHMARKS,
-      value: JSON.stringify(benchmarks)
-    });
-
-    return {
-      dataSource,
-      symbol,
-      id: assetProfile.id,
-      name: assetProfile.name
-    };
+  public async deleteBenchmark(identifier: any): Promise<any> {
+    return this.benchmarkManager.deleteBenchmark(identifier);
   }
 
-  public async deleteBenchmark({
-    dataSource,
-    symbol
-  }: AssetProfileIdentifier): Promise<Partial<SymbolProfile>> {
-    const assetProfile = await this.prismaService.symbolProfile.findFirst({
-      where: {
-        dataSource,
-        symbol
-      }
-    });
-
-    if (!assetProfile) {
-      return null;
-    }
-
-    let benchmarks =
-      (await this.propertyService.getByKey<BenchmarkProperty[]>(
-        PROPERTY_BENCHMARKS
-      )) ?? [];
-
-    benchmarks = benchmarks.filter(({ symbolProfileId }) => {
-      return symbolProfileId !== assetProfile.id;
-    });
-
-    await this.propertyService.put({
-      key: PROPERTY_BENCHMARKS,
-      value: JSON.stringify(benchmarks)
-    });
-
-    return {
-      dataSource,
-      symbol,
-      id: assetProfile.id,
-      name: assetProfile.name
-    };
+  public async getBenchmarkAssetProfiles(options: {
+    enableSharing?: boolean;
+  } = {}): Promise<any[]> {
+    return this.benchmarkManager.getBenchmarkAssetProfiles(options);
   }
 
-  public getMarketCondition(
-    aPerformanceInPercent: number
-  ): Benchmark['marketCondition'] {
-    if (aPerformanceInPercent >= 0) {
-      return 'ALL_TIME_HIGH';
-    } else if (aPerformanceInPercent <= -0.2) {
-      return 'BEAR_MARKET';
-    } else {
-      return 'NEUTRAL_MARKET';
-    }
+  public getMarketCondition(performanceInPercent: number): string {
+    return this.benchmarkCalculator.getMarketCondition(performanceInPercent);
+  }
+
+  public calculateChangeInPercentage(
+    baseValue: number,
+    currentValue: number
+  ): number {
+    return this.benchmarkCalculator.calculateChangeInPercentage(
+      baseValue,
+      currentValue
+    );
+  }
+
+  public async getBenchmarkTrends(identifier: any): Promise<any> {
+    return this.benchmarkTrend.getBenchmarkTrends(identifier);
   }
 
   private async calculateAndCacheBenchmarks({
     enableSharing = false
-  }): Promise<BenchmarkResponse['benchmarks']> {
+  }): Promise<Benchmark[]> {
     Logger.debug('Calculate benchmarks', 'BenchmarkService');
 
-    const benchmarkAssetProfiles = await this.getBenchmarkAssetProfiles({
+    const benchmarkAssetProfiles = await this.benchmarkManager.getBenchmarkAssetProfiles({
       enableSharing
     });
 
-    const promisesAllTimeHighs: Promise<{ date: Date; marketPrice: number }>[] =
-      [];
-    const promisesBenchmarkTrends: Promise<{
-      trend50d: BenchmarkTrend;
-      trend200d: BenchmarkTrend;
-    }>[] = [];
+    const benchmarkTrends = await this.benchmarkTrend.getMultipleBenchmarkTrends(
+      benchmarkAssetProfiles
+    );
 
-    const quotes = await this.dataProviderService.getQuotes({
-      items: benchmarkAssetProfiles.map(({ dataSource, symbol }) => {
-        return { dataSource, symbol };
-      }),
-      requestTimeout: ms('30 seconds'),
-      useCache: false
-    });
+    const benchmarks = await this.benchmarkCalculator.calculateBenchmarks(
+      benchmarkAssetProfiles,
+      benchmarkTrends
+    );
 
-    for (const { dataSource, symbol } of benchmarkAssetProfiles) {
-      promisesAllTimeHighs.push(
-        this.marketDataService.getMax({ dataSource, symbol })
-      );
-      promisesBenchmarkTrends.push(
-        this.getBenchmarkTrends({ dataSource, symbol })
-      );
-    }
-
-    const [allTimeHighs, benchmarkTrends] = await Promise.all([
-      Promise.all(promisesAllTimeHighs),
-      Promise.all(promisesBenchmarkTrends)
-    ]);
-    let storeInCache = true;
-
-    const benchmarks = allTimeHighs.map((allTimeHigh, index) => {
-      const { marketPrice } =
-        quotes[benchmarkAssetProfiles[index].symbol] ?? {};
-
-      let performancePercentFromAllTimeHigh = 0;
-
-      if (allTimeHigh?.marketPrice && marketPrice) {
-        performancePercentFromAllTimeHigh = this.calculateChangeInPercentage(
-          allTimeHigh.marketPrice,
-          marketPrice
-        );
-      } else {
-        storeInCache = false;
-      }
-
-      return {
-        dataSource: benchmarkAssetProfiles[index].dataSource,
-        marketCondition: this.getMarketCondition(
-          performancePercentFromAllTimeHigh
-        ),
-        name: benchmarkAssetProfiles[index].name,
-        performances: {
-          allTimeHigh: {
-            date: allTimeHigh?.date,
-            performancePercent:
-              performancePercentFromAllTimeHigh >= 0
-                ? 0
-                : performancePercentFromAllTimeHigh
-          }
-        },
-        symbol: benchmarkAssetProfiles[index].symbol,
-        trend50d: benchmarkTrends[index].trend50d,
-        trend200d: benchmarkTrends[index].trend200d
-      };
-    });
-
-    if (!enableSharing && storeInCache) {
-      const expiration = addHours(new Date(), 2);
-
-      await this.redisCacheService.set(
-        this.CACHE_KEY_BENCHMARKS,
-        JSON.stringify({
-          benchmarks,
-          expiration: expiration.getTime()
-        } as BenchmarkValue),
-        CACHE_TTL_INFINITE
-      );
-    }
+    await this.benchmarkCache.setCachedBenchmarks(benchmarks, enableSharing);
 
     return benchmarks;
   }
