@@ -42,55 +42,57 @@ export function query({
   return jsonpath.query(object, pathExpression);
 }
 
-export function redactAttributes({
+export function redactAttributes<T>({
   isFirstRun = true,
   object,
   options
 }: {
   isFirstRun?: boolean;
-  object: any;
-  options: { attribute: string; valueMap: { [key: string]: any } }[];
-}): any {
+  object: T;
+  options: { attribute: string; valueMap: { [key: string]: unknown } }[];
+}): T {
   if (!object || !options?.length) {
     return object;
   }
 
   // Create deep clone
-  const redactedObject = isFirstRun
+  const redactedObject: any = isFirstRun
     ? JSON.parse(JSON.stringify(object))
     : object;
 
   for (const option of options) {
-    if (redactedObject.hasOwnProperty(option.attribute)) {
-      if (option.valueMap['*'] || option.valueMap['*'] === null) {
+    if (Object.prototype.hasOwnProperty.call(redactedObject, option.attribute)) {
+      const currentValue = redactedObject[option.attribute];
+
+      if (option.valueMap['*'] !== undefined || option.valueMap['*'] === null) {
         redactedObject[option.attribute] = option.valueMap['*'];
-      } else if (option.valueMap[redactedObject[option.attribute]]) {
+      } else if (option.valueMap[currentValue] !== undefined) {
         redactedObject[option.attribute] =
-          option.valueMap[redactedObject[option.attribute]];
+          option.valueMap[currentValue];
       }
     } else {
       // If the attribute is not present on the current object,
       // check if it exists on any nested objects
       for (const property in redactedObject) {
-        if (isArray(redactedObject[property])) {
-          redactedObject[property] = redactedObject[property].map(
-            (currentObject) => {
-              return redactAttributes({
-                options,
-                isFirstRun: false,
-                object: currentObject
-              });
-            }
-          );
+        const value = redactedObject[property];
+
+        if (isArray(value)) {
+          redactedObject[property] = value.map((currentObject) => {
+            return redactAttributes({
+              options,
+              isFirstRun: false,
+              object: currentObject
+            });
+          });
         } else if (
-          isObject(redactedObject[property]) &&
-          !(redactedObject[property] instanceof Big)
+          isObject(value) &&
+          !(value instanceof Big)
         ) {
           // Recursively call the function on the nested object
           redactedObject[property] = redactAttributes({
             options,
             isFirstRun: false,
-            object: redactedObject[property]
+            object: value
           });
         }
       }

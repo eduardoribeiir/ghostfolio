@@ -3,6 +3,8 @@ import { setTimeout } from 'timers/promises';
 
 import { PortfolioSnapshotQueueJob } from './interfaces/portfolio-snapshot-queue-job.interface';
 
+type PortfolioSnapshotJob = Job<PortfolioSnapshotQueueJob>;
+
 export const PortfolioSnapshotServiceMock = {
   addJobToQueue({
     opts
@@ -10,8 +12,8 @@ export const PortfolioSnapshotServiceMock = {
     data: PortfolioSnapshotQueueJob;
     name: string;
     opts?: JobOptions;
-  }): Promise<Job<any>> {
-    const mockJob: Partial<Job<any>> = {
+  }): Promise<PortfolioSnapshotJob> {
+    const mockJob: Partial<PortfolioSnapshotJob> = {
       finished: async () => {
         await setTimeout(100);
 
@@ -21,12 +23,14 @@ export const PortfolioSnapshotServiceMock = {
 
     this.jobsStore.set(opts?.jobId, mockJob);
 
-    return Promise.resolve(mockJob as Job<any>);
+    return Promise.resolve(mockJob as PortfolioSnapshotJob);
   },
-  getJob(jobId: string): Promise<Job<any>> {
+
+  getJob(jobId: string): Promise<PortfolioSnapshotJob> {
     const job = this.jobsStore.get(jobId);
 
-    return Promise.resolve(job as Job<any>);
+    return Promise.resolve(job as PortfolioSnapshotJob);
   },
-  jobsStore: new Map<string, Partial<Job<any>>>()
+
+  jobsStore: new Map<string, Partial<PortfolioSnapshotJob>>()
 };

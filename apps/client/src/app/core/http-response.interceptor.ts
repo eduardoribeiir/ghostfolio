@@ -40,11 +40,11 @@ export class HttpResponseInterceptor implements HttpInterceptor {
   }
 
   public intercept(
-    request: HttpRequest<any>,
+    request: HttpRequest<unknown>,
     next: HttpHandler
-  ): Observable<HttpEvent<any>> {
+  ): Observable<HttpEvent<unknown>> {
     return next.handle(request).pipe(
-      tap((event: HttpEvent<any>) => {
+      tap((event: HttpEvent<unknown>) => {
         return event;
       }),
       catchError((error: HttpErrorResponse) => {

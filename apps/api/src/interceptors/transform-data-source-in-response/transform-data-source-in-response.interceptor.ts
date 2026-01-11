@@ -13,9 +13,9 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable()
-export class TransformDataSourceInResponseInterceptor<
-  T
-> implements NestInterceptor<T, any> {
+export class TransformDataSourceInResponseInterceptor<T>
+  implements NestInterceptor<T, T>
+{
   private encodedDataSourceMap: {
     [dataSource: string]: string;
   } = {};
@@ -34,7 +34,7 @@ export class TransformDataSourceInResponseInterceptor<
 
           return encodedDataSourceMap;
         },
-        {}
+        {} as { [dataSource: string]: string }
       );
     }
   }
@@ -42,11 +42,11 @@ export class TransformDataSourceInResponseInterceptor<
   public intercept(
     context: ExecutionContext,
     next: CallHandler<T>
-  ): Observable<any> {
+  ): Observable<T> {
     const isExportMode = context.getClass().name === 'ExportController';
 
     return next.handle().pipe(
-      map((data: any) => {
+      map((data: T) => {
         if (this.configurationService.get('ENABLE_FEATURE_SUBSCRIPTION')) {
           const valueMap = this.encodedDataSourceMap;
 
@@ -66,7 +66,7 @@ export class TransformDataSourceInResponseInterceptor<
                 attribute: 'dataSource'
               }
             ]
-          });
+          }) as T;
         }
 
         return data;

@@ -18,7 +18,7 @@ export class PerformanceLoggingInterceptor implements NestInterceptor {
   public intercept(
     context: ExecutionContext,
     next: CallHandler
-  ): Observable<any> {
+  ): Observable<unknown> {
     const startTime = performance.now();
 
     const className = context.getClass().name;
@@ -37,13 +37,13 @@ export class PerformanceLoggingInterceptor implements NestInterceptor {
 }
 
 export function LogPerformance(
-  target: any,
+  target: object,
   propertyKey: string,
   descriptor: PropertyDescriptor
-) {
-  const originalMethod = descriptor.value;
+): PropertyDescriptor {
+  const originalMethod = descriptor.value as (...args: unknown[]) => unknown;
 
-  descriptor.value = async function (...args: any[]) {
+  descriptor.value = async function (...args: unknown[]): Promise<unknown> {
     const startTime = performance.now();
     const performanceLoggingService = new PerformanceLoggingService();
 
@@ -52,23 +52,23 @@ export function LogPerformance(
     if (result instanceof Promise) {
       // Handle async method
       return result
-        .then((res: any) => {
+        .then((res: unknown) => {
           performanceLoggingService.logPerformance({
             startTime,
-            className: target.constructor.name,
+            className: (target as any).constructor.name,
             methodName: propertyKey
           });
 
           return res;
         })
-        .catch((error: any) => {
+        .catch((error: unknown) => {
           throw error;
         });
     } else {
       // Handle sync method
       performanceLoggingService.logPerformance({
         startTime,
-        className: target.constructor.name,
+        className: (target as any).constructor.name,
         methodName: propertyKey
       });
 

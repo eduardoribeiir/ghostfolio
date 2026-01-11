@@ -16,16 +16,15 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 @Injectable()
-export class RedactValuesInResponseInterceptor<T> implements NestInterceptor<
-  T,
-  any
-> {
+export class RedactValuesInResponseInterceptor<T>
+  implements NestInterceptor<T, T>
+{
   public intercept(
     context: ExecutionContext,
     next: CallHandler<T>
-  ): Observable<any> {
+  ): Observable<T> {
     return next.handle().pipe(
-      map((data: any) => {
+      map((data: T) => {
         const { headers, user }: { headers: Headers; user: UserWithSettings } =
           context.switchToHttp().getRequest();
 
@@ -73,7 +72,7 @@ export class RedactValuesInResponseInterceptor<T> implements NestInterceptor<
                 }
               };
             })
-          });
+          }) as T;
         }
 
         return data;
