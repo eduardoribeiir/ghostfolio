@@ -37,6 +37,8 @@ import { ellipsisHorizontal, trashOutline } from 'ionicons/icons';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { catchError, filter, of, Subject, takeUntil } from 'rxjs';
 
+import { AdminSettingsService } from './services/admin-settings.service';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -56,6 +58,7 @@ import { catchError, filter, of, Subject, takeUntil } from 'rxjs';
     NgxSkeletonLoaderModule,
     RouterModule
   ],
+  providers: [AdminSettingsService],
   selector: 'gf-admin-settings',
   styleUrls: ['./admin-settings.component.scss'],
   templateUrl: './admin-settings.component.html'

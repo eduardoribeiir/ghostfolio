@@ -38,6 +38,12 @@ import {
 import 'chartjs-adapter-date-fns';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 
+import {
+  LineChartConfig,
+  LineChartData,
+  LineChartOptions
+} from './interfaces/line-chart-config.interface';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, NgxSkeletonLoaderModule],
@@ -48,24 +54,25 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 export class GfLineChartComponent
   implements AfterViewInit, OnChanges, OnDestroy
 {
-  @Input() benchmarkDataItems: LineChartItem[] = [];
-  @Input() benchmarkLabel = '';
-  @Input() colorScheme: ColorScheme;
-  @Input() currency: string;
-  @Input() historicalDataItems: LineChartItem[];
-  @Input() isAnimated = false;
-  @Input() label: string;
-  @Input() locale = getLocale();
-  @Input() showGradient = false;
-  @Input() showLegend = false;
-  @Input() showLoader = true;
-  @Input() showXAxis = false;
-  @Input() showYAxis = false;
-  @Input() unit: string;
-  @Input() yMax: number;
-  @Input() yMaxLabel: string;
-  @Input() yMin: number;
-  @Input() yMinLabel: string;
+  @Input() config: LineChartConfig;
+  @Input() data: LineChartData = {
+    benchmarkDataItems: [],
+    benchmarkLabel: '',
+    historicalDataItems: [],
+    label: '',
+    yMax: undefined,
+    yMaxLabel: '',
+    yMin: undefined,
+    yMinLabel: ''
+  };
+  @Input() options: LineChartOptions = {
+    isAnimated: false,
+    showGradient: false,
+    showLegend: false,
+    showLoader: true,
+    showXAxis: false,
+    showYAxis: false
+  };
 
   @ViewChild('chartCanvas') chartCanvas;
 
@@ -87,6 +94,78 @@ export class GfLineChartComponent
 
     Tooltip.positioners['top'] = (_elements, position: TooltipPosition) =>
       getTooltipPositionerMapTop(this.chart, position);
+  }
+
+  public get benchmarkDataItems(): LineChartItem[] {
+    return this.data?.benchmarkDataItems ?? [];
+  }
+
+  public get benchmarkLabel(): string {
+    return this.data?.benchmarkLabel ?? '';
+  }
+
+  public get colorScheme(): ColorScheme {
+    return this.config?.colorScheme;
+  }
+
+  public get currency(): string {
+    return this.config?.currency;
+  }
+
+  public get historicalDataItems(): LineChartItem[] {
+    return this.data?.historicalDataItems;
+  }
+
+  public get isAnimated(): boolean {
+    return this.options?.isAnimated ?? false;
+  }
+
+  public get label(): string {
+    return this.data?.label;
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get showGradient(): boolean {
+    return this.options?.showGradient ?? false;
+  }
+
+  public get showLegend(): boolean {
+    return this.options?.showLegend ?? false;
+  }
+
+  public get showLoader(): boolean {
+    return this.options?.showLoader ?? true;
+  }
+
+  public get showXAxis(): boolean {
+    return this.options?.showXAxis ?? false;
+  }
+
+  public get showYAxis(): boolean {
+    return this.options?.showYAxis ?? false;
+  }
+
+  public get unit(): string {
+    return this.config?.unit;
+  }
+
+  public get yMax(): number {
+    return this.data?.yMax;
+  }
+
+  public get yMaxLabel(): string {
+    return this.data?.yMaxLabel;
+  }
+
+  public get yMin(): number {
+    return this.data?.yMin;
+  }
+
+  public get yMinLabel(): string {
+    return this.data?.yMinLabel;
   }
 
   public ngAfterViewInit() {

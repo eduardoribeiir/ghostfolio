@@ -65,6 +65,7 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { Subject } from 'rxjs';
 import { distinctUntilChanged, switchMap, takeUntil } from 'rxjs/operators';
 
+import { AdminMarketDataFilterService } from './admin-market-data-filter.service';
 import { AdminMarketDataService } from './admin-market-data.service';
 import { GfAssetProfileDialogComponent } from './asset-profile-dialog/asset-profile-dialog.component';
 import { AssetProfileDialogParams } from './asset-profile-dialog/interfaces/interfaces';
@@ -90,7 +91,7 @@ import { CreateAssetProfileDialogParams } from './create-asset-profile-dialog/in
     NgxSkeletonLoaderModule,
     RouterModule
   ],
-  providers: [AdminMarketDataService],
+  providers: [AdminMarketDataService, AdminMarketDataFilterService],
   selector: 'gf-admin-market-data',
   styleUrls: ['./admin-market-data.scss'],
   templateUrl: './admin-market-data.html'
@@ -102,46 +103,7 @@ export class GfAdminMarketDataComponent
   @ViewChild(MatSort) sort: MatSort;
 
   public activeFilters: Filter[] = [];
-  public allFilters: Filter[] = [
-    ...Object.keys(AssetSubClass)
-      .filter((assetSubClass) => {
-        return assetSubClass !== 'CASH';
-      })
-      .map((assetSubClass) => {
-        return {
-          id: assetSubClass.toString(),
-          label: translate(assetSubClass),
-          type: 'ASSET_SUB_CLASS' as Filter['type']
-        };
-      }),
-    ...Object.keys(DataSource).map((dataSource) => {
-      return {
-        id: dataSource.toString(),
-        label: dataSource,
-        type: 'DATA_SOURCE' as Filter['type']
-      };
-    }),
-    {
-      id: 'BENCHMARKS',
-      label: $localize`Benchmarks`,
-      type: 'PRESET_ID' as Filter['type']
-    },
-    {
-      id: 'CURRENCIES',
-      label: $localize`Currencies`,
-      type: 'PRESET_ID' as Filter['type']
-    },
-    {
-      id: 'ETF_WITHOUT_COUNTRIES',
-      label: $localize`ETFs without Countries`,
-      type: 'PRESET_ID' as Filter['type']
-    },
-    {
-      id: 'ETF_WITHOUT_SECTORS',
-      label: $localize`ETFs without Sectors`,
-      type: 'PRESET_ID' as Filter['type']
-    }
-  ];
+  public allFilters: Filter[] = [];
   public benchmarks: Partial<SymbolProfile>[];
   public currentDataSource: DataSource;
   public currentSymbol: string;
@@ -165,6 +127,7 @@ export class GfAdminMarketDataComponent
 
   public constructor(
     public adminMarketDataService: AdminMarketDataService,
+    private adminMarketDataFilterService: AdminMarketDataFilterService,
     private adminService: AdminService,
     private changeDetectorRef: ChangeDetectorRef,
     private dataService: DataService,
@@ -175,6 +138,7 @@ export class GfAdminMarketDataComponent
     private userService: UserService
   ) {
     this.info = this.dataService.fetchInfo();
+    this.allFilters = this.adminMarketDataFilterService.getAllFilters();
 
     this.hasPermissionForSubscription = hasPermission(
       this.info?.globalPermissions,
@@ -371,18 +335,15 @@ export class GfAdminMarketDataComponent
   ) {
     this.isLoading = true;
 
-    this.pageSize =
-      this.activeFilters.length === 1 &&
-      this.activeFilters[0].type === 'PRESET_ID'
-        ? undefined
-        : DEFAULT_PAGE_SIZE;
+    this.pageSize = DEFAULT_PAGE_SIZE;
 
     if (pageIndex === 0 && this.paginator) {
       this.paginator.pageIndex = 0;
     }
 
-    this.placeholder =
-      this.activeFilters.length <= 0 ? $localize`Filter by...` : '';
+    this.placeholder = this.adminMarketDataFilterService.getPlaceholder(
+      this.activeFilters
+    );
 
     this.selection.clear();
 

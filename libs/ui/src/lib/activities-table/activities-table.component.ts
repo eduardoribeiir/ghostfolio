@@ -68,6 +68,11 @@ import { GfActivityTypeComponent } from '../activity-type/activity-type.componen
 import { GfEntityLogoComponent } from '../entity-logo/entity-logo.component';
 import { GfNoTransactionsInfoComponent } from '../no-transactions-info/no-transactions-info.component';
 import { GfValueComponent } from '../value/value.component';
+import {
+  ActivitiesTableConfig,
+  ActivitiesTableData,
+  ActivitiesTableOptions
+} from './interfaces/activities-table-config.interface';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -96,20 +101,23 @@ import { GfValueComponent } from '../value/value.component';
 export class GfActivitiesTableComponent
   implements AfterViewInit, OnChanges, OnDestroy, OnInit
 {
-  @Input() baseCurrency: string;
-  @Input() dataSource: MatTableDataSource<Activity>;
+  @Input() config: ActivitiesTableConfig;
+  @Input() data: ActivitiesTableData;
+  @Input() options: ActivitiesTableOptions = {
+    hasPermissionToCreateActivity: false,
+    hasPermissionToDeleteActivity: false,
+    hasPermissionToExportActivities: false,
+    hasPermissionToFilter: false,
+    hasPermissionToImportActivities: false,
+    hasPermissionToOpenDetails: true,
+    pageSize: DEFAULT_PAGE_SIZE,
+    showActions: true,
+    showCheckbox: false
+  };
   @Input() deviceType: string;
   @Input() hasActivities: boolean;
-  @Input() hasPermissionToCreateActivity: boolean;
-  @Input() hasPermissionToDeleteActivity: boolean;
-  @Input() hasPermissionToExportActivities: boolean;
-  @Input() hasPermissionToOpenDetails = true;
-  @Input() locale = getLocale();
   @Input() pageIndex: number;
-  @Input() pageSize = DEFAULT_PAGE_SIZE;
   @Input() showAccountColumn = true;
-  @Input() showActions = true;
-  @Input() showCheckbox = false;
   @Input() showNameColumn = true;
   @Input() sortColumn: string;
   @Input() sortDirection: SortDirection;

@@ -53,6 +53,8 @@ import ms, { StringValue } from 'ms';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+import { AdminOverviewService } from './services/admin-overview.service';
+
 @Component({
   imports: [
     CommonModule,
@@ -68,6 +70,7 @@ import { takeUntil } from 'rxjs/operators';
     ReactiveFormsModule,
     RouterModule
   ],
+  providers: [AdminOverviewService],
   selector: 'gf-admin-overview',
   styleUrls: ['./admin-overview.scss'],
   templateUrl: './admin-overview.html'
@@ -91,8 +94,7 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   private unsubscribeSubject = new Subject<void>();
 
   public constructor(
-    private adminService: AdminService,
-    private cacheService: CacheService,
+    private adminOverviewService: AdminOverviewService,
     private changeDetectorRef: ChangeDetectorRef,
     private dataService: DataService,
     private notificationService: NotificationService,
@@ -167,14 +169,12 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   }
 
   public onAddCoupon() {
-    const coupons = [
-      ...this.coupons,
-      {
-        code: `${ghostfolioPrefix}${this.generateCouponCode(14)}`,
-        duration: this.couponDuration
-      }
-    ];
-    this.putAdminSetting({ key: PROPERTY_COUPONS, value: coupons });
+    this.adminOverviewService
+      .addCoupon(this.coupons, this.couponDuration)
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe(() => {
+        setTimeout(() => window.location.reload(), 300);
+      });
   }
 
   public onChangeCouponDuration(aCouponDuration: StringValue) {
@@ -184,10 +184,12 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   public onDeleteCoupon(aCouponCode: string) {
     this.notificationService.confirm({
       confirmFn: () => {
-        const coupons = this.coupons.filter((coupon) => {
-          return coupon.code !== aCouponCode;
-        });
-        this.putAdminSetting({ key: PROPERTY_COUPONS, value: coupons });
+        this.adminOverviewService
+          .deleteCoupon(this.coupons, aCouponCode)
+          .pipe(takeUntil(this.unsubscribeSubject))
+          .subscribe(() => {
+            setTimeout(() => window.location.reload(), 300);
+          });
       },
       confirmType: ConfirmationDialogType.Warn,
       title: $localize`Do you really want to delete this coupon?`
@@ -197,10 +199,12 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   public onDeleteSystemMessage() {
     this.notificationService.confirm({
       confirmFn: () => {
-        this.putAdminSetting({
-          key: PROPERTY_SYSTEM_MESSAGE,
-          value: undefined
-        });
+        this.adminOverviewService
+          .deleteSystemMessage()
+          .pipe(takeUntil(this.unsubscribeSubject))
+          .subscribe(() => {
+            setTimeout(() => window.location.reload(), 300);
+          });
       },
       confirmType: ConfirmationDialogType.Warn,
       title: $localize`Do you really want to delete this system message?`
@@ -208,22 +212,22 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   }
 
   public onEnableDataGatheringChange(aEvent: MatSlideToggleChange) {
-    this.putAdminSetting({
-      key: PROPERTY_IS_DATA_GATHERING_ENABLED,
-      value: aEvent.checked ? undefined : false
-    });
+    this.adminOverviewService
+      .setDataGatheringEnabled(aEvent.checked)
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe(() => {
+        setTimeout(() => window.location.reload(), 300);
+      });
   }
 
   public onFlushCache() {
     this.notificationService.confirm({
       confirmFn: () => {
-        this.cacheService
-          .flush()
+        this.adminOverviewService
+          .flushCache()
           .pipe(takeUntil(this.unsubscribeSubject))
           .subscribe(() => {
-            setTimeout(() => {
-              window.location.reload();
-            }, 300);
+            setTimeout(() => window.location.reload(), 300);
           });
       },
       confirmType: ConfirmationDialogType.Warn,
@@ -232,17 +236,21 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   }
 
   public onEnableUserSignupModeChange(aEvent: MatSlideToggleChange) {
-    this.putAdminSetting({
-      key: PROPERTY_IS_USER_SIGNUP_ENABLED,
-      value: aEvent.checked ? undefined : false
-    });
+    this.adminOverviewService
+      .setUserSignupEnabled(aEvent.checked)
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe(() => {
+        setTimeout(() => window.location.reload(), 300);
+      });
   }
 
   public onReadOnlyModeChange(aEvent: MatSlideToggleChange) {
-    this.putAdminSetting({
-      key: PROPERTY_IS_READ_ONLY_MODE,
-      value: aEvent.checked ? true : undefined
-    });
+    this.adminOverviewService
+      .setReadOnlyMode(aEvent.checked)
+      .pipe(takeUntil(this.unsubscribeSubject))
+      .subscribe(() => {
+        setTimeout(() => window.location.reload(), 300);
+      });
   }
 
   public onSetSystemMessage() {
@@ -258,15 +266,17 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
     );
 
     if (systemMessage) {
-      this.putAdminSetting({
-        key: PROPERTY_SYSTEM_MESSAGE,
-        value: JSON.parse(systemMessage)
-      });
+      this.adminOverviewService
+        .setSystemMessage(JSON.parse(systemMessage))
+        .pipe(takeUntil(this.unsubscribeSubject))
+        .subscribe(() => {
+          setTimeout(() => window.location.reload(), 300);
+        });
     }
   }
 
   public onSyncDemoUserAccount() {
-    this.adminService
+    this.adminOverviewService
       .syncDemoUserAccount()
       .pipe(takeUntil(this.unsubscribeSubject))
       .subscribe(() => {
@@ -286,45 +296,18 @@ export class GfAdminOverviewComponent implements OnDestroy, OnInit {
   }
 
   private fetchAdminData() {
-    this.adminService
+    this.adminOverviewService
       .fetchAdminData()
       .pipe(takeUntil(this.unsubscribeSubject))
-      .subscribe(({ settings, transactionCount, userCount, version }) => {
-        this.coupons = (settings[PROPERTY_COUPONS] as Coupon[]) ?? [];
-        this.isDataGatheringEnabled =
-          settings[PROPERTY_IS_DATA_GATHERING_ENABLED] === false ? false : true;
-        this.systemMessage = settings[PROPERTY_SYSTEM_MESSAGE] as SystemMessage;
-        this.transactionCount = transactionCount;
-        this.userCount = userCount;
-        this.version = version;
+      .subscribe((data) => {
+        this.coupons = data.coupons;
+        this.isDataGatheringEnabled = data.isDataGatheringEnabled;
+        this.systemMessage = data.systemMessage;
+        this.transactionCount = data.transactionCount;
+        this.userCount = data.userCount;
+        this.version = data.version;
 
         this.changeDetectorRef.markForCheck();
-      });
-  }
-
-  private generateCouponCode(aLength: number) {
-    const characters = 'ABCDEFGHJKLMNPQRSTUVWXYZ123456789';
-    let couponCode = '';
-
-    for (let i = 0; i < aLength; i++) {
-      couponCode += characters.charAt(
-        Math.floor(Math.random() * characters.length)
-      );
-    }
-
-    return couponCode;
-  }
-
-  private putAdminSetting({ key, value }: { key: string; value: any }) {
-    this.dataService
-      .putAdminSetting(key, {
-        value: value || value === false ? JSON.stringify(value) : undefined
-      })
-      .pipe(takeUntil(this.unsubscribeSubject))
-      .subscribe(() => {
-        setTimeout(() => {
-          window.location.reload();
-        }, 300);
       });
   }
 }

@@ -43,6 +43,12 @@ import annotationPlugin from 'chartjs-plugin-annotation';
 import { isAfter } from 'date-fns';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 
+import {
+  InvestmentChartConfig,
+  InvestmentChartData,
+  InvestmentChartOptions
+} from './interfaces/investment-chart-config.interface';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, NgxSkeletonLoaderModule],
@@ -51,16 +57,17 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
   templateUrl: './investment-chart.component.html'
 })
 export class GfInvestmentChartComponent implements OnChanges, OnDestroy {
-  @Input() benchmarkDataItems: InvestmentItem[] = [];
-  @Input() benchmarkDataLabel = '';
-  @Input() colorScheme: ColorScheme;
-  @Input() currency: string;
-  @Input() groupBy: GroupBy;
-  @Input() historicalDataItems: LineChartItem[] = [];
-  @Input() isInPercent = false;
-  @Input() isLoading = false;
-  @Input() locale = getLocale();
-  @Input() savingsRate = 0;
+  @Input() config: InvestmentChartConfig;
+  @Input() data: InvestmentChartData = {
+    benchmarkDataItems: [],
+    benchmarkDataLabel: '',
+    historicalDataItems: [],
+    savingsRate: 0
+  };
+  @Input() options: InvestmentChartOptions = {
+    isInPercent: false,
+    isLoading: false
+  };
 
   @ViewChild('chartCanvas') chartCanvas;
 
@@ -83,6 +90,46 @@ export class GfInvestmentChartComponent implements OnChanges, OnDestroy {
 
     Tooltip.positioners['top'] = (_elements, position: TooltipPosition) =>
       getTooltipPositionerMapTop(this.chart, position);
+  }
+
+  public get benchmarkDataItems(): InvestmentItem[] {
+    return this.data?.benchmarkDataItems ?? [];
+  }
+
+  public get benchmarkDataLabel(): string {
+    return this.data?.benchmarkDataLabel ?? '';
+  }
+
+  public get colorScheme(): ColorScheme {
+    return this.config?.colorScheme;
+  }
+
+  public get currency(): string {
+    return this.config?.currency;
+  }
+
+  public get groupBy(): GroupBy {
+    return this.config?.groupBy;
+  }
+
+  public get historicalDataItems(): LineChartItem[] {
+    return this.data?.historicalDataItems ?? [];
+  }
+
+  public get isInPercent(): boolean {
+    return this.options?.isInPercent ?? false;
+  }
+
+  public get isLoading(): boolean {
+    return this.options?.isLoading ?? false;
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get savingsRate(): number {
+    return this.data?.savingsRate ?? 0;
   }
 
   public ngOnChanges() {

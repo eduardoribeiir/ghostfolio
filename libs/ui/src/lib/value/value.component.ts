@@ -12,6 +12,12 @@ import { IonIcon } from '@ionic/angular/standalone';
 import { isNumber } from 'lodash';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 
+import {
+  ValueComponentConfig,
+  ValueComponentData,
+  ValueComponentOptions
+} from './interfaces/value-config.interface';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, IonIcon, NgxSkeletonLoaderModule],
@@ -21,26 +27,86 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
   templateUrl: './value.component.html'
 })
 export class GfValueComponent implements OnChanges {
-  @Input() colorizeSign = false;
-  @Input() deviceType: string;
-  @Input() icon = '';
-  @Input() isAbsolute = false;
-  @Input() isCurrency = false;
-  @Input() isDate = false;
-  @Input() isPercent = false;
-  @Input() locale: string;
-  @Input() position = '';
-  @Input() precision: number;
-  @Input() size: 'large' | 'medium' | 'small' = 'small';
-  @Input() subLabel = '';
-  @Input() unit = '';
-  @Input() value: number | string = '';
+  @Input() config: ValueComponentConfig;
+  @Input() data: ValueComponentData = {
+    icon: '',
+    position: '',
+    subLabel: '',
+    unit: '',
+    value: ''
+  };
+  @Input() options: ValueComponentOptions = {
+    colorizeSign: false,
+    isAbsolute: false,
+    isCurrency: false,
+    isDate: false,
+    isPercent: false
+  };
 
   public absoluteValue = 0;
   public formattedValue = '';
   public isNumber = false;
   public isString = false;
   public useAbsoluteValue = false;
+
+  private _locale: string;
+  private _precision: number;
+
+  public get colorizeSign(): boolean {
+    return this.options?.colorizeSign ?? false;
+  }
+
+  public get deviceType(): string {
+    return this.config?.deviceType;
+  }
+
+  public get icon(): string {
+    return this.data?.icon ?? '';
+  }
+
+  public get isAbsolute(): boolean {
+    return this.options?.isAbsolute ?? false;
+  }
+
+  public get isCurrency(): boolean {
+    return this.options?.isCurrency ?? false;
+  }
+
+  public get isDate(): boolean {
+    return this.options?.isDate ?? false;
+  }
+
+  public get isPercent(): boolean {
+    return this.options?.isPercent ?? false;
+  }
+
+  public get locale(): string {
+    return this._locale ?? this.config?.locale;
+  }
+
+  public get position(): string {
+    return this.data?.position ?? '';
+  }
+
+  public get precision(): number {
+    return this._precision ?? this.config?.precision;
+  }
+
+  public get size(): 'large' | 'medium' | 'small' {
+    return this.config?.size ?? 'small';
+  }
+
+  public get subLabel(): string {
+    return this.data?.subLabel ?? '';
+  }
+
+  public get unit(): string {
+    return this.data?.unit ?? '';
+  }
+
+  public get value(): number | string {
+    return this.data?.value ?? '';
+  }
 
   public ngOnChanges() {
     this.initializeVariables();
@@ -138,8 +204,8 @@ export class GfValueComponent implements OnChanges {
     this.formattedValue = '';
     this.isNumber = false;
     this.isString = false;
-    this.locale = this.locale || getLocale();
-    this.precision = this.precision >= 0 ? this.precision : undefined;
+    this._locale = this.config?.locale || getLocale();
+    this._precision = this.config?.precision >= 0 ? this.config?.precision : undefined;
     this.useAbsoluteValue = false;
   }
 }

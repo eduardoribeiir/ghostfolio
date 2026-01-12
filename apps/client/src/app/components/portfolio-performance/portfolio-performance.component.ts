@@ -26,6 +26,12 @@ import { timeOutline } from 'ionicons/icons';
 import { isNumber } from 'lodash';
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 
+import {
+  PortfolioPerformanceConfig,
+  PortfolioPerformanceData,
+  PortfolioPerformanceOptions
+} from './interfaces/portfolio-performance-config.interface';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, GfValueComponent, IonIcon, NgxSkeletonLoaderModule],
@@ -34,21 +40,60 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
   templateUrl: './portfolio-performance.component.html'
 })
 export class GfPortfolioPerformanceComponent implements OnChanges {
-  @Input() deviceType: string;
-  @Input() errors: ResponseError['errors'];
-  @Input() isAllTimeHigh: boolean;
-  @Input() isAllTimeLow: boolean;
-  @Input() isLoading: boolean;
-  @Input() locale = getLocale();
-  @Input() performance: PortfolioPerformance;
-  @Input() precision: number;
-  @Input() showDetails: boolean;
-  @Input() unit: string;
+  @Input() config: PortfolioPerformanceConfig;
+  @Input() data: PortfolioPerformanceData;
+  @Input() options: PortfolioPerformanceOptions;
 
   @ViewChild('value') value: ElementRef;
 
   public constructor(private notificationService: NotificationService) {
     addIcons({ timeOutline });
+  }
+
+  public get deviceType(): string {
+    return this.config?.deviceType;
+  }
+
+  public get errors(): ResponseError['errors'] {
+    return this.data?.errors;
+  }
+
+  public get isAllTimeHigh(): boolean {
+    return this.options?.isAllTimeHigh;
+  }
+
+  public get isAllTimeLow(): boolean {
+    return this.options?.isAllTimeLow;
+  }
+
+  public get isLoading(): boolean {
+    return this.options?.isLoading;
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get performance(): PortfolioPerformance {
+    return this.data?.performance;
+  }
+
+  public get precision(): number {
+    return this.options?.precision ?? 2;
+  }
+
+  public set precision(value: number) {
+    if (this.options) {
+      this.options.precision = value;
+    }
+  }
+
+  public get showDetails(): boolean {
+    return this.options?.showDetails;
+  }
+
+  public get unit(): string {
+    return this.config?.unit;
   }
 
   public ngOnChanges() {

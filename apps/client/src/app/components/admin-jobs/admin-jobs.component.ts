@@ -51,6 +51,8 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 
+import { AdminJobsService } from './services/admin-jobs.service';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -65,6 +67,7 @@ import { takeUntil } from 'rxjs/operators';
     NgxSkeletonLoaderModule,
     ReactiveFormsModule
   ],
+  providers: [AdminJobsService],
   selector: 'gf-admin-jobs',
   styleUrls: ['./admin-jobs.scss'],
   templateUrl: './admin-jobs.html'

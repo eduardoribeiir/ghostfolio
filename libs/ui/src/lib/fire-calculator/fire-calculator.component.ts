@@ -58,6 +58,11 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { Subject, debounceTime, takeUntil } from 'rxjs';
 
 import { FireCalculatorService } from './fire-calculator.service';
+import {
+  FireCalculatorConfig,
+  FireCalculatorValues,
+  FireCalculatorPermissions
+} from './interfaces/fire-calculator-config.interface';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -77,16 +82,9 @@ import { FireCalculatorService } from './fire-calculator.service';
   templateUrl: './fire-calculator.component.html'
 })
 export class GfFireCalculatorComponent implements OnChanges, OnDestroy {
-  @Input() annualInterestRate = 0;
-  @Input() colorScheme: ColorScheme;
-  @Input() currency: string;
-  @Input() deviceType: string;
-  @Input() fireWealth = 0;
-  @Input() hasPermissionToUpdateUserSettings: boolean;
-  @Input() locale = getLocale();
-  @Input() projectedTotalAmount = 0;
-  @Input() retirementDate: Date;
-  @Input() savingsRate = 0;
+  @Input() config: FireCalculatorConfig;
+  @Input() values: FireCalculatorValues;
+  @Input() permissions: FireCalculatorPermissions;
 
   @Output() annualInterestRateChanged = new EventEmitter<number>();
   @Output() calculationCompleted =
@@ -170,6 +168,47 @@ export class GfFireCalculatorComponent implements OnChanges, OnDestroy {
       .subscribe((retirementDate) => {
         this.retirementDateChanged.emit(retirementDate);
       });
+  }
+
+  // Getters for backward compatibility with templates
+  public get annualInterestRate(): number {
+    return this.values?.annualInterestRate ?? 0;
+  }
+
+  public get colorScheme(): ColorScheme {
+    return this.config?.colorScheme;
+  }
+
+  public get currency(): string {
+    return this.config?.currency;
+  }
+
+  public get deviceType(): string {
+    return this.config?.deviceType;
+  }
+
+  public get fireWealth(): number {
+    return this.values?.fireWealth ?? 0;
+  }
+
+  public get hasPermissionToUpdateUserSettings(): boolean {
+    return this.permissions?.hasPermissionToUpdateUserSettings;
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get projectedTotalAmount(): number {
+    return this.values?.projectedTotalAmount ?? 0;
+  }
+
+  public get retirementDate(): Date {
+    return this.values?.retirementDate;
+  }
+
+  public get savingsRate(): number {
+    return this.values?.savingsRate ?? 0;
   }
 
   public ngOnChanges() {

@@ -23,6 +23,12 @@ import {
   informationCircleOutline
 } from 'ionicons/icons';
 
+import {
+  PortfolioSummaryConfig,
+  PortfolioSummaryData,
+  PortfolioSummaryOptions
+} from './interfaces/portfolio-summary-config.interface';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [CommonModule, GfValueComponent, IonIcon, MatTooltipModule],
@@ -31,15 +37,9 @@ import {
   templateUrl: './portfolio-summary.component.html'
 })
 export class GfPortfolioSummaryComponent implements OnChanges {
-  @Input() baseCurrency: string;
-  @Input() deviceType: string;
-  @Input() hasImpersonationId: boolean;
-  @Input() hasPermissionToUpdateUserSettings: boolean;
-  @Input() isLoading: boolean;
-  @Input() language: string;
-  @Input() locale = getLocale();
-  @Input() summary: PortfolioSummary;
-  @Input() user: User;
+  @Input() config: PortfolioSummaryConfig;
+  @Input() data: PortfolioSummaryData;
+  @Input() options: PortfolioSummaryOptions;
 
   @Output() emergencyFundChanged = new EventEmitter<number>();
 
@@ -49,6 +49,42 @@ export class GfPortfolioSummaryComponent implements OnChanges {
 
   public precision = 2;
   public timeInMarket: string;
+
+  public get baseCurrency(): string {
+    return this.config?.baseCurrency;
+  }
+
+  public get deviceType(): string {
+    return this.config?.deviceType;
+  }
+
+  public get hasImpersonationId(): boolean {
+    return this.options?.hasImpersonationId;
+  }
+
+  public get hasPermissionToUpdateUserSettings(): boolean {
+    return this.options?.hasPermissionToUpdateUserSettings;
+  }
+
+  public get isLoading(): boolean {
+    return this.options?.isLoading;
+  }
+
+  public get language(): string {
+    return this.config?.language;
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get summary(): PortfolioSummary {
+    return this.data?.summary;
+  }
+
+  public get user(): User {
+    return this.data?.user;
+  }
 
   public get buyingPowerPercentage() {
     return this.summary?.totalValueInBaseCurrency

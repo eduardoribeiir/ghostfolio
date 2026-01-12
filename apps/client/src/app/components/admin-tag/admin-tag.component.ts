@@ -32,6 +32,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { GfCreateOrUpdateTagDialogComponent } from './create-or-update-tag-dialog/create-or-update-tag-dialog.component';
 import { CreateOrUpdateTagDialogParams } from './create-or-update-tag-dialog/interfaces/interfaces';
+import { AdminTagService } from './services/admin-tag.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -43,6 +44,7 @@ import { CreateOrUpdateTagDialogParams } from './create-or-update-tag-dialog/int
     MatTableModule,
     RouterModule
   ],
+  providers: [AdminTagService],
   selector: 'gf-admin-tag',
   styleUrls: ['./admin-tag.component.scss'],
   templateUrl: './admin-tag.component.html'
@@ -58,6 +60,7 @@ export class GfAdminTagComponent implements OnDestroy, OnInit {
   private unsubscribeSubject = new Subject<void>();
 
   public constructor(
+    private adminTagService: AdminTagService,
     private changeDetectorRef: ChangeDetectorRef,
     private dataService: DataService,
     private deviceService: DeviceDetectorService,

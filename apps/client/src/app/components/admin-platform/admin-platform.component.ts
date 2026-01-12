@@ -33,6 +33,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 import { GfCreateOrUpdatePlatformDialogComponent } from './create-or-update-platform-dialog/create-or-update-platform-dialog.component';
 import { CreateOrUpdatePlatformDialogParams } from './create-or-update-platform-dialog/interfaces/interfaces';
+import { AdminPlatformService } from './services/admin-platform.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -45,6 +46,7 @@ import { CreateOrUpdatePlatformDialogParams } from './create-or-update-platform-
     MatTableModule,
     RouterModule
   ],
+  providers: [AdminPlatformService],
   selector: 'gf-admin-platform',
   styleUrls: ['./admin-platform.component.scss'],
   templateUrl: './admin-platform.component.html'
@@ -60,6 +62,7 @@ export class GfAdminPlatformComponent implements OnDestroy, OnInit {
   private unsubscribeSubject = new Subject<void>();
 
   public constructor(
+    private adminPlatformService: AdminPlatformService,
     private adminService: AdminService,
     private changeDetectorRef: ChangeDetectorRef,
     private dataService: DataService,

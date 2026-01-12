@@ -35,6 +35,12 @@ import {
 import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import { Subject, Subscription } from 'rxjs';
 
+import {
+  AccountsTableConfig,
+  AccountsTableData,
+  AccountsTableOptions
+} from './interfaces/accounts-table-config.interface';
+
 @Component({
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [
@@ -54,21 +60,18 @@ import { Subject, Subscription } from 'rxjs';
   templateUrl: './accounts-table.component.html'
 })
 export class GfAccountsTableComponent implements OnChanges, OnDestroy {
-  @Input() accounts: Account[];
-  @Input() baseCurrency: string;
-  @Input() deviceType: string;
-  @Input() hasPermissionToOpenDetails = true;
-  @Input() locale = getLocale();
-  @Input() showActions: boolean;
-  @Input() showAllocationInPercentage: boolean;
-  @Input() showBalance = true;
-  @Input() showFooter = true;
-  @Input() showTransactions = true;
-  @Input() showValue = true;
-  @Input() showValueInBaseCurrency = true;
-  @Input() totalBalanceInBaseCurrency: number;
-  @Input() totalValueInBaseCurrency: number;
-  @Input() transactionCount: number;
+  @Input() config: AccountsTableConfig;
+  @Input() data: AccountsTableData;
+  @Input() options: AccountsTableOptions = {
+    hasPermissionToOpenDetails: true,
+    showActions: false,
+    showAllocationInPercentage: false,
+    showBalance: true,
+    showFooter: true,
+    showTransactions: true,
+    showValue: true,
+    showValueInBaseCurrency: true
+  };
 
   @Output() accountDeleted = new EventEmitter<string>();
   @Output() accountToUpdate = new EventEmitter<Account>();
@@ -96,6 +99,66 @@ export class GfAccountsTableComponent implements OnChanges, OnDestroy {
       trashOutline,
       walletOutline
     });
+  }
+
+  public get accounts(): Account[] {
+    return this.data?.accounts;
+  }
+
+  public get baseCurrency(): string {
+    return this.config?.baseCurrency;
+  }
+
+  public get deviceType(): string {
+    return this.config?.deviceType;
+  }
+
+  public get hasPermissionToOpenDetails(): boolean {
+    return this.options?.hasPermissionToOpenDetails ?? true;
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get showActions(): boolean {
+    return this.options?.showActions;
+  }
+
+  public get showAllocationInPercentage(): boolean {
+    return this.options?.showAllocationInPercentage;
+  }
+
+  public get showBalance(): boolean {
+    return this.options?.showBalance ?? true;
+  }
+
+  public get showFooter(): boolean {
+    return this.options?.showFooter ?? true;
+  }
+
+  public get showTransactions(): boolean {
+    return this.options?.showTransactions ?? true;
+  }
+
+  public get showValue(): boolean {
+    return this.options?.showValue ?? true;
+  }
+
+  public get showValueInBaseCurrency(): boolean {
+    return this.options?.showValueInBaseCurrency ?? true;
+  }
+
+  public get totalBalanceInBaseCurrency(): number {
+    return this.data?.totalBalanceInBaseCurrency;
+  }
+
+  public get totalValueInBaseCurrency(): number {
+    return this.data?.totalValueInBaseCurrency;
+  }
+
+  public get transactionCount(): number {
+    return this.data?.transactionCount;
   }
 
   public ngOnChanges() {

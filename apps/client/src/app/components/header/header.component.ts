@@ -19,6 +19,12 @@ import { NotificationService } from '@ghostfolio/ui/notifications';
 import { GfPremiumIndicatorComponent } from '@ghostfolio/ui/premium-indicator';
 import { DataService } from '@ghostfolio/ui/services';
 
+import {
+  HeaderConfig,
+  HeaderPermissions,
+  HeaderDisplayOptions
+} from './interfaces/header-config.interface';
+
 import { CommonModule } from '@angular/common';
 import {
   ChangeDetectionStrategy,
@@ -87,15 +93,9 @@ export class GfHeaderComponent implements OnChanges {
     }
   }
 
-  @Input() currentRoute: string;
-  @Input() deviceType: string;
-  @Input() hasPermissionToChangeDateRange: boolean;
-  @Input() hasPermissionToChangeFilters: boolean;
-  @Input() hasPromotion: boolean;
-  @Input() hasTabs: boolean;
-  @Input() info: InfoItem;
-  @Input() pageTitle: string;
-  @Input() user: User;
+  @Input() config: HeaderConfig;
+  @Input() permissions: HeaderPermissions;
+  @Input() displayOptions: HeaderDisplayOptions;
 
   @Output() signOut = new EventEmitter<void>();
 
@@ -161,6 +161,43 @@ export class GfHeaderComponent implements OnChanges {
       radioButtonOffOutline,
       radioButtonOnOutline
     });
+  }
+
+  // Getters for backward compatibility with templates
+  public get currentRoute(): string {
+    return this.config?.currentRoute;
+  }
+
+  public get deviceType(): string {
+    return this.config?.deviceType;
+  }
+
+  public get pageTitle(): string {
+    return this.config?.pageTitle;
+  }
+
+  public get hasPermissionToChangeDateRange(): boolean {
+    return this.permissions?.hasPermissionToChangeDateRange;
+  }
+
+  public get hasPermissionToChangeFilters(): boolean {
+    return this.permissions?.hasPermissionToChangeFilters;
+  }
+
+  public get hasPromotion(): boolean {
+    return this.displayOptions?.hasPromotion;
+  }
+
+  public get hasTabs(): boolean {
+    return this.displayOptions?.hasTabs;
+  }
+
+  public get info(): InfoItem {
+    return this.displayOptions?.info;
+  }
+
+  public get user(): User {
+    return this.displayOptions?.user;
   }
 
   public ngOnChanges() {

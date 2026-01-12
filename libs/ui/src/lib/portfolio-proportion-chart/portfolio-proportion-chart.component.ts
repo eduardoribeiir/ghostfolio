@@ -34,6 +34,11 @@ import { NgxSkeletonLoaderModule } from 'ngx-skeleton-loader';
 import OpenColor from 'open-color';
 
 import { translate } from '../i18n';
+import {
+  PortfolioProportionChartConfig,
+  PortfolioProportionChartData,
+  PortfolioProportionChartOptions
+} from './interfaces/portfolio-proportion-chart-config.interface';
 
 const {
   blue,
@@ -60,21 +65,12 @@ const {
 export class GfPortfolioProportionChartComponent
   implements AfterViewInit, OnChanges, OnDestroy
 {
-  @Input() baseCurrency: string;
-  @Input() colorScheme: ColorScheme;
-  @Input() cursor: string;
-  @Input() data: {
-    [symbol: string]: Pick<PortfolioPosition, 'type'> & {
-      dataSource?: DataSource;
-      name: string;
-      value: number;
-    };
-  } = {};
-  @Input() isInPercent = false;
-  @Input() keys: string[] = [];
-  @Input() locale = getLocale();
-  @Input() maxItems?: number;
-  @Input() showLabels = false;
+  @Input() config: PortfolioProportionChartConfig;
+  @Input() chartData: PortfolioProportionChartData;
+  @Input() options: PortfolioProportionChartOptions = {
+    isInPercent: false,
+    showLabels: false
+  };
 
   @Output() proportionChartClicked = new EventEmitter<AssetProfileIdentifier>();
 
@@ -91,6 +87,43 @@ export class GfPortfolioProportionChartComponent
 
   public constructor() {
     Chart.register(ArcElement, DoughnutController, LinearScale, Tooltip);
+  }
+
+  // Getters for backward compatibility with templates
+  public get baseCurrency(): string {
+    return this.config?.baseCurrency;
+  }
+
+  public get colorScheme(): ColorScheme {
+    return this.config?.colorScheme;
+  }
+
+  public get cursor(): string {
+    return this.config?.cursor;
+  }
+
+  public get data() {
+    return this.chartData?.data ?? {};
+  }
+
+  public get isInPercent(): boolean {
+    return this.options?.isInPercent ?? false;
+  }
+
+  public get keys(): string[] {
+    return this.chartData?.keys ?? [];
+  }
+
+  public get locale(): string {
+    return this.config?.locale ?? getLocale();
+  }
+
+  public get maxItems(): number | undefined {
+    return this.options?.maxItems;
+  }
+
+  public get showLabels(): boolean {
+    return this.options?.showLabels ?? false;
   }
 
   public ngAfterViewInit() {
