@@ -2,8 +2,7 @@ import { getTooltipOptions } from '@ghostfolio/common/chart-helper';
 import { UNKNOWN_KEY } from '@ghostfolio/common/config';
 import { getLocale, getSum, getTextColor } from '@ghostfolio/common/helper';
 import {
-  AssetProfileIdentifier,
-  PortfolioPosition
+  AssetProfileIdentifier
 } from '@ghostfolio/common/interfaces';
 import { ColorScheme } from '@ghostfolio/common/types';
 

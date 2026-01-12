@@ -3,7 +3,6 @@ import {
   TAG_ID_EXCLUDE_FROM_ANALYSIS
 } from '@ghostfolio/common/config';
 import { ConfirmationDialogType } from '@ghostfolio/common/enums';
-import { getLocale } from '@ghostfolio/common/helper';
 import {
   Activity,
   AssetProfileIdentifier
@@ -41,7 +40,7 @@ import {
   Sort,
   SortDirection
 } from '@angular/material/sort';
-import { MatTableDataSource, MatTableModule } from '@angular/material/table';
+import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { IonIcon } from '@ionic/angular/standalone';
 import { isUUID } from 'class-validator';
@@ -152,6 +151,51 @@ export class GfActivitiesTableComponent
 
   private unsubscribeSubject = new Subject<void>();
 
+  // Getters for template compatibility
+  public get dataSource() {
+    return this.data?.dataSource;
+  }
+
+  public get showActions() {
+    return this.options.showActions ?? true;
+  }
+
+  public get hasPermissionToCreateActivity() {
+    return this.options.hasPermissionToCreateActivity ?? false;
+  }
+
+  public get hasPermissionToDeleteActivity() {
+    return this.options.hasPermissionToDeleteActivity ?? false;
+  }
+
+  public get hasPermissionToExportActivities() {
+    return this.options.hasPermissionToExportActivities ?? false;
+  }
+
+  public get hasPermissionToFilter() {
+    return this.options.hasPermissionToFilter ?? false;
+  }
+
+  public get hasPermissionToImportActivities() {
+    return this.options.hasPermissionToImportActivities ?? false;
+  }
+
+  public get hasPermissionToOpenDetails() {
+    return this.options.hasPermissionToOpenDetails ?? true;
+  }
+
+  public get showCheckbox() {
+    return this.options.showCheckbox ?? false;
+  }
+
+  public get pageSize() {
+    return this.options.pageSize ?? DEFAULT_PAGE_SIZE;
+  }
+
+  public get locale() {
+    return this.config?.locale;
+  }
+
   public constructor(private notificationService: NotificationService) {
     addIcons({
       alertCircleOutline,
@@ -181,8 +225,8 @@ export class GfActivitiesTableComponent
   }
 
   public ngAfterViewInit() {
-    if (this.dataSource) {
-      this.dataSource.paginator = this.paginator;
+    if (this.data?.dataSource) {
+      this.data.dataSource.paginator = this.paginator;
     }
 
     this.sort.sortChange.subscribe((value: Sort) => {
@@ -227,14 +271,14 @@ export class GfActivitiesTableComponent
       });
     }
 
-    if (this.dataSource) {
+    if (this.data?.dataSource) {
       this.isLoading = false;
     }
   }
 
   public areAllRowsSelected() {
     const numSelectedRows = this.selectedRows.selected.length;
-    const numTotalRows = this.dataSource.data.length;
+    const numTotalRows = this.data?.dataSource?.data?.length || 0;
     return numSelectedRows === numTotalRows;
   }
 
@@ -307,7 +351,7 @@ export class GfActivitiesTableComponent
 
   public onExportDrafts() {
     this.exportDrafts.emit(
-      this.dataSource.filteredData
+      this.data.dataSource.filteredData
         .filter((activity) => {
           return activity.isDraft;
         })
@@ -339,7 +383,7 @@ export class GfActivitiesTableComponent
     if (this.areAllRowsSelected()) {
       this.selectedRows.clear();
     } else {
-      this.dataSource.data.forEach((row) => {
+      this.data?.dataSource?.data?.forEach((row) => {
         this.selectedRows.select(row);
       });
     }
