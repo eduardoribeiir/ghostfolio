@@ -1,0 +1,7 @@
+feat: refatoracao allocations-page e outros componentes
+
+- Extrai AllocationsDataTransformerService para transformacao
+- Cria processors separados (geographic, sector, symbol, etc)
+- Adiciona AllocationsStateManager para estado centralizado
+- Cria interfaces e extrai formatters
+- Corrige imports e simplifica componentes

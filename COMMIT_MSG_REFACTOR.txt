@@ -1,0 +1,7 @@
+﻿feat: refatoracao allocations-page e novos services
+
+- Extrai AllocationsDataTransformerService para transformacao
+- Cria processors (geographic, sector, symbol, top-holdings, markets-advanced)
+- Adiciona AllocationsStateManager para gerenciamento de estado
+- Cria interfaces IAllocationsData, IGeographicData, ISectorData
+- Extrai value-formatter.ts com funcoes de formatacao
